@@ -1,0 +1,5 @@
+{
+    "particle.targetDevice": " alpaca_penguin",
+    "particle.targetPlatform": "boron",
+    "particle.firmwareVersion": "6.2.1"
+}

@@ -4,7 +4,7 @@
     "files.associations": {
         "*.ino": "cpp"
     },
-    "particle.targetPlatform": "boron",
     "particle.firmwareVersion": "6.2.1",
+    "particle.targetPlatform": "boron",
     "particle.targetDevice": "alpaca_penguin"
 }
