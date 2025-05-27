@@ -27,7 +27,7 @@ SdFile myFile;
 
 
 // Chip select pin
-const int chipSelect = D5;
+const int chipSelect = A5;
 
 
 void setup() {
