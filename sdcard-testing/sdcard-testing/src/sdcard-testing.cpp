@@ -36,6 +36,8 @@ void setup() {
 
 
     // bring chipselect pin high
+    pinMode(chipSelect, OUTPUT);
+    digitalWrite(chipSelect, HIGH);
 
 
     if (!sd.begin(chipSelect, SD_SCK_MHZ(4))) {
