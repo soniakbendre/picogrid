@@ -30,9 +30,17 @@ SdFile myFile;
 const int chipSelect = A5;
 const int tempSensorPin = A1;
 
-// Temperature conversion factor for a specific sensor, e.g., TMP36
-  //converting from 10 mv per degree with 500 mV offset to degrees
-const float tempConvFactor = (3.3 / 4095.0) * 100.0 - 0.5;
+// define stop function
+int stop(String command) {
+    if(command.equalsIgnoreCase("stop"))
+    {
+        Serial.println("Closing file...");
+        myFile.close();
+        Serial.end(); // Close the Serial connection
+        return 0; // Return 0 to indicate success
+    }
+    return -1;
+}
 
 void setup() {
     Serial.begin(9600);
@@ -75,16 +83,16 @@ void loop() {
     Time.format(timestamp, TIME_FORMAT_DEFAULT); // Sat Jan 10 08:22:04 2004 , same as Time.timeStr()
 
     Time.zone(-6.00);  // setup a time zone, which is part of the ISO8601 format
-    formatted_time = Time.format(timestamp, TIME_FORMAT_ISO8601_FULL); 
+    String formatted_time = Time.format(timestamp, TIME_FORMAT_ISO8601_FULL); 
 
-    float temperature = analogRead(tempSensorPin) * tempConvFactor; // Convert analog reading to temperature
+    float temperature = ((((analogRead(tempSensorPin) * 3.3) / 4095.0) * 1000) - 500.0)/10; // Convert analog reading to temperature
     myFile.print(formatted_time); // Write timestamp to the file
     myFile.print(",");
     myFile.println(temperature);
     myFile.flush(); // Ensure data is written to the file
 
     Serial.print("Timestamp: ");
-    Serial.print(timestamp);
+    Serial.print(formatted_time);
     Serial.print(", Temperature: ");
     Serial.println(temperature);
     
@@ -101,3 +109,4 @@ void loop() {
         }
     }
 }
+
