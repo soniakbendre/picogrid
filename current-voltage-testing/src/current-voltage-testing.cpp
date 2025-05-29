@@ -34,7 +34,7 @@ const int currentSensorPin = A0;
 const int voltageSensorPin = A2;
 
 // Define sensor constants
-const float sensitivity = 2.66;       // mA/mV
+const float sensitivity = 0.266;       // mA/mV
 const float battRefV = 1650.0;      // mV @ 0 current
 const float lowV = 11.5;            // Low voltage threshold (V)
 const float highV = 12.0;           // High voltage threshold (V)
