@@ -34,8 +34,8 @@ const int currentSensorPin = A0;
 const int voltageSensorPin = A2;
 
 // Define sensor constants
-const float sensitivity = 2.5;       // mA/mV
-const float battRefV = 2480.0;      // mV @ 0 current
+const float sensitivity = 2.66;       // mA/mV
+const float battRefV = 1650.0;      // mV @ 0 current
 const float lowV = 11.5;            // Low voltage threshold (V)
 const float highV = 12.0;           // High voltage threshold (V)
 const int avgSamples = 10;           // Number of sensor readings to average
@@ -46,6 +46,57 @@ const int logTime = 5000;            // ms between logs
 int currentValue = 0;
 int temperatureValue = 0;
 int voltageValue = 0;
+
+
+// define stop function
+int stop(String command) {
+  if(command.equalsIgnoreCase("stop"))
+  {
+      Serial.println("Closing file...");
+      myFile.close();
+      Serial.end(); // Close the Serial connection
+      return 0; // Return 0 to indicate success
+  }
+  return -1;
+}
+
+// define sleep function
+int sleepp(String command) {
+  if(command.equalsIgnoreCase("sleep"))
+  {
+      Serial.println("Device going to sleep...");
+  // Close the file if it's open
+  if (myFile.isOpen()) {
+      Serial.println("Device sleeping.");
+      myFile.close();
+      return 0;
+  }
+  
+  // Put the device to sleep
+  System.sleep(SLEEP_MODE_DEEP, 60); // Sleep for 60 seconds
+}
+  return -1;
+}
+
+//define wakeup function
+int wakeup(String command) {
+  if(command.equalsIgnoreCase("wakeup"))
+  {
+  // Reinitialize the SD card and file
+  if (!sd.begin(chipSelect, SD_SCK_MHZ(4))) {
+      Serial.println("SD card initialization failed!");
+      return 0;
+  }
+
+  if (!myFile.open("eLFL_log.csv", O_WRITE | O_APPEND)) {
+      Serial.println("Error opening file");
+      return 0;
+  }
+
+  Serial.println("Device woke up and file is ready for writing.");
+}
+return -1;
+}
 
 
 void setup() {
@@ -82,13 +133,13 @@ void setup() {
       return;
   }
 
-  myFile.println(""); // Write header to the file
+  myFile.println("Time,Current(mA),Temp,Voltage(V)"); // Write header to the file
 
   // declare cloud stop function
   Particle.function("stop", stop);
 
   // declare cloud sleep function
-  Particle.function("sleep", sleep);
+  Particle.function("sleep", sleepp);
 
   // declare cloud wakeup function
   Particle.function("wakeup", wakeup);
@@ -124,53 +175,14 @@ void loop() {
 
   String timestamp = Time.format(Time.now(), "%Y-%m-%d %H:%M:%S");
  
-  String dataLine = timestamp + "," + String(current, 2) + "," +
-                    "," + String(temperature, 2) + "," +
+  String dataLine = timestamp + "," + String(current, 2) + 
+                    "," + String(temperature, 2) + 
                     "," + String(voltage, 2);
 
   myFile.println(dataLine);
-  Serial1.println(dataLine); // Send to OpenLog
+  Serial.println(dataLine); // Send to OpenLog
  
   delay(logTime - (delayTime * avgSamples));
 }
 
 
-// define stop function
-int stop(String command) {
-  if(command.equalsIgnoreCase("stop"))
-  {
-      Serial.println("Closing file...");
-      myFile.close();
-      Serial.end(); // Close the Serial connection
-      return 0; // Return 0 to indicate success
-  }
-  return -1;
-}
-
-// define sleep function
-void sleep() {
-  // Close the file if it's open
-  if (myFile.isOpen()) {
-      Serial.println("Device sleeping.");
-      myFile.close();
-  }
-  
-  // Put the device to sleep
-  System.sleep(SLEEP_MODE_DEEP, 60); // Sleep for 60 seconds
-}
-
-//define wakeup function
-void wakeup() {
-  // Reinitialize the SD card and file
-  if (!sd.begin(chipSelect, SD_SCK_MHZ(4))) {
-      Serial.println("SD card initialization failed!");
-      return;
-  }
-
-  if (!myFile.open("eLFL_log.csv", O_WRITE | O_APPEND)) {
-      Serial.println("Error opening file");
-      return;
-  }
-
-  Serial.println("Device woke up and file is ready for writing.");
-}
