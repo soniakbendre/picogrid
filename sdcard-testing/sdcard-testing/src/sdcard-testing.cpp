@@ -83,7 +83,7 @@ void loop() {
     Time.format(timestamp, TIME_FORMAT_DEFAULT); // Sat Jan 10 08:22:04 2004 , same as Time.timeStr()
 
     Time.zone(-6.00);  // setup a time zone, which is part of the ISO8601 format
-    String formatted_time = Time.format(timestamp, TIME_FORMAT_ISO8601_FULL); 
+    String formatted_time = Time.format(timestamp, TIME_FORMAT_DEFAULT); 
 
     float temperature = ((((analogRead(tempSensorPin) * 3.3) / 4095.0) * 1000) - 500.0)/10; // Convert analog reading to temperature
     myFile.print(formatted_time); // Write timestamp to the file
