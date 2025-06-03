@@ -1,4 +1,3 @@
-
 /* 
  * Project eLFL
  * Author: Sonia Bendre, Manushri Muthukumaran, Sukriti Somvanshi
@@ -54,7 +53,10 @@ int stop(String command) {
   {
       Serial.println("Closing file...");
       myFile.close();
-      Serial.end(); // Close the Serial connection
+      Serial.println("File closed. Device will stop logging.");
+      // Optionally, you can also stop the device from running further
+      // by entering a deep sleep or resetting the device.
+      Particle.disconnect();
       return 0; // Return 0 to indicate success
   }
   return -1;
@@ -87,8 +89,8 @@ int wakeup(String command) {
       Serial.println("SD card initialization failed!");
       return 0;
   }
-  
-  if (!myFile.open("eLFL_log.csv", O_WRITE | O_CREAT | O_APPEND)) {
+
+  if (!myFile.open("eLFL_log.csv", O_WRITE | O_APPEND)) {
       Serial.println("Error opening file");
       return 0;
   }
@@ -117,36 +119,26 @@ void setup() {
   pinMode(voltageSensorPin, INPUT);
 
   Time.zone(-5); // Set your local time zone (e.g. CST = -5, (for now I have set)  adjust as needed)
-  
-  if (!Particle.connected()) {
-    Particle.connect(); // Ensure connection is attempted
-    waitUntil(Particle.connected); // Then wait for it
-}
+  waitUntil(Particle.connected); // Ensure time is synced
 
   // Initialize the SD card
   if (!sd.begin(chipSelect, SD_SCK_MHZ(4))) {
       Serial.println("SD card initialization failed!");
-  }
-  else {
-      Serial.println("SD card initialized successfully.");
-      
-      // Open file for writing
-      if (myFile.isOpen()) {
-      myFile.close();
-      }
-      if (!myFile.open("eLFL_log.csv", O_WRITE | O_CREAT | O_APPEND)) {
-        Serial.println("Error opening file");
-      }
-      else
-      {
-        
-          if(myFile.fileSize() == 0)
-            myFile.println("Time,Current(mA),Temp(C),Voltage(V)"); // Write header to the file
-      } 
+      return;
   }
 
-  Serial.println("Time,Current(mA),Temp(C),Voltage(V)");
+  Serial.println("SD card initialized.");
 
+  // Open file for writing
+  if (!myFile.open("eLFL_log.csv", O_WRITE | O_CREAT | O_APPEND)) {
+      Serial.println("Error opening file");
+      return;
+  }
+
+  // Write header to the file if it's empty
+  if (myFile.fileSize() == 0) {
+      myFile.println("Time,Current(mA),Temp,Voltage(V)");
+  }
   // declare cloud stop function
   Particle.function("stop", stop);
 
@@ -159,30 +151,9 @@ void setup() {
 
 
 void loop() {   
-  delay(100); // Allow time for serial output
-  // reinitialize SD card
-  if (!sd.begin(chipSelect, SD_SCK_MHZ(4))) {
-        Serial.println("SD card initialization failed!");
-    }
-  else{
-      Serial.println("SD card initialized successfully.");
-  // Open file for writing
-  if (myFile.isOpen()) {
-    myFile.close();
-  }
-  if (!myFile.open("eLFL_log.csv", O_WRITE | O_CREAT | O_APPEND)) {
-    Serial.println("Error opening file");
-  }
-}
-
-  unsigned long startTime = millis();
-
-  while (millis() - startTime < 60000) { // Stay awake for 60 seconds
   currentValue = 0;
   temperatureValue = 0;
   voltageValue = 0;
-
-  
  
   for (int i = 0; i < avgSamples; i++) {
     currentValue += analogRead(currentSensorPin);
@@ -211,29 +182,12 @@ void loop() {
   String dataLine = timestamp + "," + String(current, 2) + 
                     "," + String(temperature, 2) + 
                     "," + String(voltage, 2);
-  if(myFile.isOpen())
-  {
-    myFile.println(dataLine);
-  }
+
+  myFile.println(dataLine);
   Serial.println(dataLine); // Send to OpenLog
-  Particle.publish("eLFL_log", dataLine, PRIVATE); // publish dataLine to Particle Cloud
+ 
   delay(logTime - (delayTime * avgSamples));
-  }
 
-  if(myFile.isOpen())
-  {
-    myFile.flush();
-    myFile.close(); // Close the file after writing
-  }
-  Serial.println("Sleeping for 60 seconds...");
-  delay(200); // Let serial finish printing
-
-  SystemSleepConfiguration config;
-  config.mode(SystemSleepMode::STOP)
-      .duration(60s)
-      .network(NETWORK_INTERFACE_CELLULAR);
-
-  System.sleep(config);
+  // sleep for 1 minute, then wake up
+  // System.sleep(SLEEP_MODE_DEEP, 60); // Sleep for 60 seconds
 }
-
-

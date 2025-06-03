@@ -2,8 +2,7 @@
     "extensions.ignoreRecommendations": true,
     "C_Cpp.default.configurationProvider": "particle.particle-vscode-core",
     "files.associations": {
-        "*.ino": "cpp",
-        "xlocmes": "cpp"
+        "*.ino": "cpp"
     },
     "particle.targetDevice": "wombat_seal",
     "particle.targetPlatform": "boron",
