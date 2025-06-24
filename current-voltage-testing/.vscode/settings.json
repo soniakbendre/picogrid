@@ -5,7 +5,7 @@
         "*.ino": "cpp",
         "xlocmes": "cpp"
     },
-    "particle.targetDevice": "wombat_seal",
+    "particle.targetDevice": "badger2",
     "particle.targetPlatform": "boron",
     "particle.firmwareVersion": "6.2.1"
 }
